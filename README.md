@@ -1,5 +1,6 @@
-# trigBoardV8_BaseFirmware
-https://www.kevindarrah.com/wiki/index.php?title=TrigBoard
+https://youtu.be/fxBOs1GMj-A
 
-Release:
-3/19/20 - First Release
+Updating the original project from here: https://youtu.be/HX2szVGYoX4
+Now with trigBoard, so easily can change the wakeup time and state all with the Bluetooth connected chrome app.  Really shows off some of the new features with the trigBoard v8.   
+Wiki: 
+https://www.kevindarrah.com/wiki/index.php?title=TrigBoard
