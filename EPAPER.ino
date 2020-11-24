@@ -336,10 +336,13 @@ void ePaperUpdate() {
     somethingWentWrong();
     return;
   }
-  if (client.connect("cdc.gov", 443)) {
-    Serial.println("connected to cdc...");
+  if (client.connect("api.covidtracking.com", 443)) {
+    Serial.println("connected to server...");
 
-    String http = String("GET https://www.cdc.gov/coronavirus/2019-ncov/json/us-cases-map-data.json HTTP/1.1\r\nHost: cdc.gov\r\nConnection: close\r\nAccept: Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n\r\n");
+
+    String http = String("GET https://api.covidtracking.com/v1/states/");
+    http.concat(config.trigName);
+    http.concat("/current.json HTTP/1.1\r\nHost: api.covidtracking.com\r\nConnection: close\r\nAccept: Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n\r\n");
     client.print(http);
     Serial.println("requesting...");
     //let's wait for something to come back... only a few seconds
@@ -351,9 +354,10 @@ void ePaperUpdate() {
       }
     }
     delay(1000);
-    String jsonData = client.readStringUntil('[');
+    String jsonData = client.readStringUntil('{');
 
-    jsonData = "[";
+    jsonData = "{";
+
     startTime = millis();
     while (millis() - startTime < 1000) {
       if (client.available()) {
@@ -362,53 +366,91 @@ void ePaperUpdate() {
       }
     }
     client.stop();
-
+    Serial.println(jsonData);
     //https://arduinojson.org/v6/assistant/
     DynamicJsonDocument doc(20000);
     // Deserialize the JSON document
     deserializeJson(doc, jsonData);
     //JsonObject obj = doc.as<JsonObject>();
-    JsonArray obj = doc.as<JsonArray>();
+    //JsonArray obj = doc.as<JsonArray>();
+    String positiveCases = doc["positive"];
+    String deaths = doc["death"];
+    String lastUpdate = doc["lastUpdateEt"];
 
-        for (int i = 0; i < obj.size(); i++) {
-          String names = obj[i]["Jurisdiction"];
-          //      Serial.print(names);
-          //      Serial.print(" ");
-          String cases = obj[i]["Cases Reported"];
-          //Serial.println(cases);
-          if (names == config.trigName) {
-            Serial.print("Cases in ");
-            Serial.print(config.trigName);
-            Serial.print("= ");
-            Serial.println(cases);
-            ePaperDisplay.fillScreen(GxEPD_WHITE);
+    ePaperDisplay.fillScreen(GxEPD_WHITE);
 
-            ePaperDisplay.drawBitmap(gImage_covidicon, 440, 0, 200, 200, GxEPD_BLACK);
+    ePaperDisplay.drawBitmap(gImage_covidicon, 440, 0, 200, 200, GxEPD_BLACK);
 
-            const GFXfont* f = &FreeMonoBold24pt7b;
-            ePaperDisplay.setFont(f);
-            ePaperDisplay.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
-            ePaperDisplay.setCursor(0, 30);
-            ePaperDisplay.println("COVID 19");
-            ePaperDisplay.println("STATUS");
-            ePaperDisplay.println("From cdc.gov");
-            ePaperDisplay.println("");
-            ePaperDisplay.println("Cases Reported in: ");
-            ePaperDisplay.print("-> ");
-            ePaperDisplay.println(config.trigName);
-            ePaperDisplay.print("-> ");
-            ePaperDisplay.println(cases);
-            f = &FreeMonoBold18pt7b;
-            ePaperDisplay.setFont(f);
-            ePaperDisplay.print("Display Battery = ");
-            ePaperDisplay.print(batCharString);
-            ePaperDisplay.print("V");
-            ePaperDisplay.update();
+    const GFXfont* f = &FreeMonoBold24pt7b;
+    ePaperDisplay.setFont(f);
+    ePaperDisplay.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
+    ePaperDisplay.setCursor(0, 30);
+    ePaperDisplay.println("COVID 19");
+    ePaperDisplay.println("STATUS");
+    ePaperDisplay.println("TRACKER");
+    f = &FreeMonoBold18pt7b;
+    ePaperDisplay.setFont(f);
+    ePaperDisplay.println("");
+    ePaperDisplay.print("Reported in: ");
+    ePaperDisplay.println(config.trigName);
+    ePaperDisplay.print("Last Update-> ");
+    ePaperDisplay.println(lastUpdate);
+    ePaperDisplay.print("Cases-> ");
+    ePaperDisplay.println(positiveCases);
+    ePaperDisplay.print("Deaths-> ");
+    ePaperDisplay.println(deaths);
+    ePaperDisplay.print("Display Battery = ");
+    ePaperDisplay.print(batCharString);
+    ePaperDisplay.print("V");
+    ePaperDisplay.update();
 
-            return;
-          }
+    return;
+
+
+
+
+    /*
+      for (int i = 0; i < obj.size(); i++) {
+      //      int names = obj["positive"];
+      //      Serial.print(names);
+      //      Serial.print(" ");
+
+        String cases = obj[i]["Cases Reported"];
+        //Serial.println(cases);
+        if (names == config.trigName) {
+        Serial.print("Cases in ");
+        Serial.print(config.trigName);
+        Serial.print("= ");
+        Serial.println(cases);
+        ePaperDisplay.fillScreen(GxEPD_WHITE);
+
+        ePaperDisplay.drawBitmap(gImage_covidicon, 440, 0, 200, 200, GxEPD_BLACK);
+
+        const GFXfont* f = &FreeMonoBold24pt7b;
+        ePaperDisplay.setFont(f);
+        ePaperDisplay.setTextColor(GxEPD_BLACK, GxEPD_WHITE);
+        ePaperDisplay.setCursor(0, 30);
+        ePaperDisplay.println("COVID 19");
+        ePaperDisplay.println("STATUS");
+        ePaperDisplay.println("From cdc.gov");
+        ePaperDisplay.println("");
+        ePaperDisplay.println("Cases Reported in: ");
+        ePaperDisplay.print("-> ");
+        ePaperDisplay.println(config.trigName);
+        ePaperDisplay.print("-> ");
+        ePaperDisplay.println(cases);
+        f = &FreeMonoBold18pt7b;
+        ePaperDisplay.setFont(f);
+        ePaperDisplay.print("Display Battery = ");
+        ePaperDisplay.print(batCharString);
+        ePaperDisplay.print("V");
+        ePaperDisplay.update();
+
+        return;
         }
-    
+
+      }
+    */
   }
   else
     somethingWentWrong();

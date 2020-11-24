@@ -1,6 +1,6 @@
 #include "includes.h"
 
-const char fwVersion[] = "4/22/20_COVID19";
+const char fwVersion[] = "11/24/20_COVID19";
 
 //ADDED THIS STUFF FOR COVID DISPLAY
 //epaper library here:
